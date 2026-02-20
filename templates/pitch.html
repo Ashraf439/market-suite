@@ -1,31 +1,252 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-  <title>Generate Pitch</title>
-</head>
-<body>
-  <h2>Generate Pitch</h2>
-  <form id="pitchForm">
-    <label>Product: <input type="text" name="product" required></label><br>
-    <label>Customer Persona: <input type="text" name="customer" required></label><br>
-    <button type="submit">Generate</button>
-  </form>
-  <div id="pitchResult"></div>
+{% extends "base.html" %}
 
-  <script>
-    document.getElementById("pitchForm").addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const data = Object.fromEntries(new FormData(e.target).entries());
-      const res = await fetch("/generate_pitch", {
+{% block title %}Pitch Tool - MarketAI Suite{% endblock %}
+
+{% block extra_css %}
+<style>
+  .tool-header {
+    margin-bottom: 2rem;
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+  }
+
+  .tool-header-icon {
+    font-size: 2.5rem;
+    color: var(--success);
+    background: rgba(46, 204, 113, 0.1);
+    width: 80px;
+    height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 20px;
+    box-shadow: 0 0 20px rgba(46, 204, 113, 0.2);
+  }
+
+  .layout-grid {
+    display: grid;
+    grid-template-columns: 1fr 1.5fr;
+    gap: 2rem;
+  }
+
+  @media (max-width: 900px) {
+    .layout-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .input-panel {
+    position: sticky;
+    top: 2rem;
+    height: max-content;
+  }
+
+  .result-panel {
+    display: flex;
+    flex-direction: column;
+    min-height: 500px;
+  }
+
+  .result-content {
+    flex: 1;
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    padding: 1.5rem;
+    color: var(--text-main);
+    white-space: pre-wrap;
+    line-height: 1.6;
+    overflow-y: auto;
+    font-size: 0.95rem;
+  }
+
+  .empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: var(--text-muted);
+    text-align: center;
+  }
+
+  .empty-state i {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    opacity: 0.5;
+  }
+
+  .loader {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: var(--success);
+  }
+
+  .spinner {
+    width: 50px;
+    height: 50px;
+    border: 3px solid rgba(46, 204, 113, 0.3);
+    border-radius: 50%;
+    border-top-color: var(--success);
+    animation: spin 1s ease-in-out infinite;
+    margin-bottom: 1rem;
+  }
+
+  @keyframes spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  .pulse-text {
+    animation: pulse 1.5s infinite;
+    font-weight: 500;
+    letter-spacing: 1px;
+  }
+
+  @keyframes pulse {
+    0% {
+      opacity: 0.6;
+    }
+
+    50% {
+      opacity: 1;
+    }
+
+    100% {
+      opacity: 0.6;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="tool-header">
+  <div class="tool-header-icon">
+    <i class="fa-solid fa-microphone-lines"></i>
+  </div>
+  <div>
+    <h1 class="page-title" style="margin-bottom: 0;">Pitch Creator</h1>
+    <p class="page-subtitle">Craft persuasive, tailored sales pitches to land high-value deals</p>
+  </div>
+</div>
+
+<div class="layout-grid">
+  <!-- Input Panel -->
+  <div class="glass-card input-panel">
+    <h3 style="margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem;">
+      <i class="fa-solid fa-sliders"></i> Parameters
+    </h3>
+
+    <form id="pitchForm">
+      <div class="form-group">
+        <label for="product" class="form-label">Product/Service Details</label>
+        <textarea id="product" class="form-control" rows="3"
+          placeholder="Describe the core features and value of what you are selling" required></textarea>
+      </div>
+
+      <div class="form-group">
+        <label for="customer" class="form-label">Customer Persona</label>
+        <input type="text" id="customer" class="form-control" placeholder="e.g. CMO focused on ROI and fast deployment"
+          required>
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-block mt-3"
+        style="background: linear-gradient(135deg, var(--success), #27ae60); box-shadow: 0 4px 12px rgba(46, 204, 113, 0.3);">
+        <i class="fa-solid fa-wand-magic-sparkles"></i> Create Pitch
+      </button>
+    </form>
+  </div>
+
+  <!-- Output Panel -->
+  <div class="glass-card result-panel">
+    <h3 style="margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem; justify-content: space-between;">
+      <span><i class="fa-solid fa-file-lines"></i> AI Output</span>
+      <button class="btn btn-secondary" id="copyBtn" style="padding: 0.4rem 0.8rem; font-size: 0.85rem; display: none;">
+        <i class="fa-regular fa-copy"></i> Copy
+      </button>
+    </h3>
+
+    <div id="resultContent" class="result-content">
+      <!-- Empty State -->
+      <div class="empty-state" id="emptyState">
+        <i class="fa-solid fa-robot"></i>
+        <p>Provide product and persona details to generate a custom pitch.</p>
+      </div>
+
+      <!-- Loader -->
+      <div class="loader" id="loader">
+        <div class="spinner"></div>
+        <div class="pulse-text">LLaMA 3.3 is drafting your pitch...</div>
+      </div>
+
+      <!-- Actual Result -->
+      <div id="resultText" style="display: none;"></div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  document.getElementById("pitchForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const product = document.getElementById("product").value;
+    const customer = document.getElementById("customer").value;
+
+    const emptyState = document.getElementById("emptyState");
+    const loader = document.getElementById("loader");
+    const resultText = document.getElementById("resultText");
+    const copyBtn = document.getElementById("copyBtn");
+
+    emptyState.style.display = "none";
+    resultText.style.display = "none";
+    copyBtn.style.display = "none";
+    loader.style.display = "flex";
+
+    try {
+      const response = await fetch("/generate_pitch", {
         method: "POST",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify(data)
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ product, customer })
       });
-      const json = await res.json();
-      document.getElementById("pitchResult").textContent = json.result || JSON.stringify(json);
-    });
-  </script>
-</body>
-</html>
+      const data = await response.json();
+
+      loader.style.display = "none";
+      resultText.innerText = data.result || data.error;
+      resultText.style.display = "block";
+
+      if (data.result) {
+        copyBtn.style.display = "inline-flex";
+      }
+    } catch (error) {
+      loader.style.display = "none";
+      resultText.innerText = "Error connecting to server.";
+      resultText.style.display = "block";
+      resultText.style.color = "var(--danger)";
+    }
+  });
+
+  document.getElementById("copyBtn").addEventListener("click", () => {
+    const text = document.getElementById("resultText").innerText;
+    navigator.clipboard.writeText(text);
+
+    const btn = document.getElementById("copyBtn");
+    const originalHtml = btn.innerHTML;
+    btn.innerHTML = '<i class="fa-solid fa-check"></i> Copied!';
+    btn.style.color = "var(--success)";
+    btn.style.borderColor = "var(--success)";
+
+    setTimeout(() => {
+      btn.innerHTML = originalHtml;
+      btn.style.color = "";
+      btn.style.borderColor = "";
+    }, 2000);
+  });
+</script>
+{% endblock %}

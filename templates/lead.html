@@ -1,33 +1,285 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-  <title>Lead Score</title>
-</head>
-<body>
-  <h2>Lead Score</h2>
-  <form id="leadForm">
-    <label>Name: <input type="text" name="name" required></label><br>
-    <label>Budget: <input type="text" name="budget" required></label><br>
-    <label>Need: <input type="text" name="need" required></label><br>
-    <label>Urgency: <input type="text" name="urgency" required></label><br>
-    <button type="submit">Score Lead</button>
-  </form>
-  <div id="leadResult"></div>
+{% extends "base.html" %}
 
-  <script>
-    document.getElementById("leadForm").addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const data = Object.fromEntries(new FormData(e.target).entries());
-      const res = await fetch("/lead_score", {
+{% block title %}Lead Tool - MarketAI Suite{% endblock %}
+
+{% block extra_css %}
+<style>
+  .tool-header {
+    margin-bottom: 2rem;
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+  }
+
+  .tool-header-icon {
+    font-size: 2.5rem;
+    color: var(--secondary);
+    background: rgba(114, 9, 183, 0.1);
+    width: 80px;
+    height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 20px;
+    box-shadow: 0 0 20px rgba(114, 9, 183, 0.2);
+  }
+
+  .layout-grid {
+    display: grid;
+    grid-template-columns: 1fr 1.5fr;
+    gap: 2rem;
+  }
+
+  @media (max-width: 900px) {
+    .layout-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .input-panel {
+    position: sticky;
+    top: 2rem;
+    height: max-content;
+  }
+
+  .result-panel {
+    display: flex;
+    flex-direction: column;
+    min-height: 500px;
+  }
+
+  .result-content {
+    flex: 1;
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    padding: 1.5rem;
+    color: var(--text-main);
+    white-space: pre-wrap;
+    line-height: 1.6;
+    overflow-y: auto;
+    font-size: 0.95rem;
+  }
+
+  .empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: var(--text-muted);
+    text-align: center;
+  }
+
+  .empty-state i {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    opacity: 0.5;
+  }
+
+  .loader {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: var(--secondary);
+  }
+
+  .spinner {
+    width: 50px;
+    height: 50px;
+    border: 3px solid rgba(114, 9, 183, 0.3);
+    border-radius: 50%;
+    border-top-color: var(--secondary);
+    animation: spin 1s ease-in-out infinite;
+    margin-bottom: 1rem;
+  }
+
+  @keyframes spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  .pulse-text {
+    animation: pulse 1.5s infinite;
+    font-weight: 500;
+    letter-spacing: 1px;
+  }
+
+  @keyframes pulse {
+    0% {
+      opacity: 0.6;
+    }
+
+    50% {
+      opacity: 1;
+    }
+
+    100% {
+      opacity: 0.6;
+    }
+  }
+
+  /* Input Grid specifically for lead metrics */
+  .metrics-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="tool-header">
+  <div class="tool-header-icon">
+    <i class="fa-solid fa-chart-line"></i>
+  </div>
+  <div>
+    <h1 class="page-title" style="margin-bottom: 0;">Predictive Lead Score</h1>
+    <p class="page-subtitle">Analyze lead variables to instantly assess conversion probability</p>
+  </div>
+</div>
+
+<div class="layout-grid">
+  <!-- Input Panel -->
+  <div class="glass-card input-panel">
+    <h3 style="margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem;">
+      <i class="fa-solid fa-sliders"></i> Metrics
+    </h3>
+
+    <form id="leadForm">
+      <div class="form-group">
+        <label for="name" class="form-label">Lead Output/Company</label>
+        <input type="text" id="name" class="form-control" placeholder="e.g. Acme Corp Infrastructure Team" required>
+      </div>
+
+      <div class="form-group">
+        <label for="budget" class="form-label">Budget Range</label>
+        <select id="budget" class="form-control" required>
+          <option value="" disabled selected>Select estimated budget...</option>
+          <option value="Low ($0 - $10k)">Low ($0 - $10k)</option>
+          <option value="Medium ($10k - $50k)">Medium ($10k - $50k)</option>
+          <option value="High ($50k+)">High ($50k+)</option>
+          <option value="Unknown">Unknown</option>
+        </select>
+      </div>
+
+      <div class="metrics-grid">
+        <div class="form-group">
+          <label for="need" class="form-label">Requirement Intensity</label>
+          <select id="need" class="form-control" required>
+            <option value="Low (Exploring)">Low (Exploring)</option>
+            <option value="Medium (Active pain point)">Medium (Active pain point)</option>
+            <option value="High (Critical workflow)">High (Critical block)</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="urgency" class="form-label">Urgency Timeline</label>
+          <select id="urgency" class="form-control" required>
+            <option value="Future Timeline (> 6mo)">> 6 months</option>
+            <option value="Near Term (3-6mo)">3-6 months</option>
+            <option value="Immediate (< 3mo)">Immediate (< 3mo)</option>
+          </select>
+        </div>
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-block mt-3"
+        style="background: linear-gradient(135deg, var(--secondary), #3a0ca3); box-shadow: 0 4px 12px rgba(114, 9, 183, 0.3);">
+        <i class="fa-solid fa-wand-magic-sparkles"></i> Calculate Score
+      </button>
+    </form>
+  </div>
+
+  <!-- Output Panel -->
+  <div class="glass-card result-panel">
+    <h3 style="margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem; justify-content: space-between;">
+      <span><i class="fa-solid fa-file-lines"></i> AI Output</span>
+      <button class="btn btn-secondary" id="copyBtn" style="padding: 0.4rem 0.8rem; font-size: 0.85rem; display: none;">
+        <i class="fa-regular fa-copy"></i> Copy
+      </button>
+    </h3>
+
+    <div id="resultContent" class="result-content">
+      <!-- Empty State -->
+      <div class="empty-state" id="emptyState">
+        <i class="fa-solid fa-robot"></i>
+        <p>Input prospect variables to generate an AI evaluation and score.</p>
+      </div>
+
+      <!-- Loader -->
+      <div class="loader" id="loader">
+        <div class="spinner"></div>
+        <div class="pulse-text">LLaMA 3.3 is analyzing metrics...</div>
+      </div>
+
+      <!-- Actual Result -->
+      <div id="resultText" style="display: none;"></div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  document.getElementById("leadForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const name = document.getElementById("name").value;
+    const budget = document.getElementById("budget").value;
+    const need = document.getElementById("need").value;
+    const urgency = document.getElementById("urgency").value;
+
+    const emptyState = document.getElementById("emptyState");
+    const loader = document.getElementById("loader");
+    const resultText = document.getElementById("resultText");
+    const copyBtn = document.getElementById("copyBtn");
+
+    emptyState.style.display = "none";
+    resultText.style.display = "none";
+    copyBtn.style.display = "none";
+    loader.style.display = "flex";
+
+    try {
+      const response = await fetch("/lead_score", {
         method: "POST",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify(data)
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, budget, need, urgency })
       });
-      const json = await res.json();
-      document.getElementById("leadResult").textContent = json.result || JSON.stringify(json);
-    });
-  </script>
-</body>
-</html>
+      const data = await response.json();
+
+      loader.style.display = "none";
+      resultText.innerText = data.result || data.error;
+      resultText.style.display = "block";
+
+      if (data.result) {
+        copyBtn.style.display = "inline-flex";
+      }
+    } catch (error) {
+      loader.style.display = "none";
+      resultText.innerText = "Error connecting to server.";
+      resultText.style.display = "block";
+      resultText.style.color = "var(--danger)";
+    }
+  });
+
+  document.getElementById("copyBtn").addEventListener("click", () => {
+    const text = document.getElementById("resultText").innerText;
+    navigator.clipboard.writeText(text);
+
+    const btn = document.getElementById("copyBtn");
+    const originalHtml = btn.innerHTML;
+    btn.innerHTML = '<i class="fa-solid fa-check"></i> Copied!';
+    btn.style.color = "var(--success)";
+    btn.style.borderColor = "var(--success)";
+
+    setTimeout(() => {
+      btn.innerHTML = originalHtml;
+      btn.style.color = "";
+      btn.style.borderColor = "";
+    }, 2000);
+  });
+</script>
+{% endblock %}

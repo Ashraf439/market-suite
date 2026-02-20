@@ -5,3 +5,6 @@ opencv-python
 groq
 python-dotenv
 Werkzeug
+Flask-SQLAlchemy
+Flask-Login
+bcrypt

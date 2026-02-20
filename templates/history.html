@@ -1,0 +1,257 @@
+{% extends "base.html" %}
+
+{% block title %}History - MarketAI Suite{% endblock %}
+
+{% block extra_css %}
+<style>
+    .history-header {
+        margin-bottom: 2.5rem;
+        display: flex;
+        align-items: center;
+        gap: 1.5rem;
+    }
+
+    .history-header-icon {
+        font-size: 2.5rem;
+        color: var(--text-main);
+        background: rgba(255, 255, 255, 0.1);
+        width: 80px;
+        height: 80px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 20px;
+    }
+
+    .history-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+        gap: 1.5rem;
+    }
+
+    @media (max-width: 768px) {
+        .history-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .history-card {
+        display: flex;
+        flex-direction: column;
+        padding: 1.5rem;
+        gap: 1rem;
+        height: 100%;
+    }
+
+    .history-card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        border-bottom: 1px solid var(--border-color);
+        padding-bottom: 1rem;
+    }
+
+    .badge {
+        padding: 0.35rem 0.75rem;
+        border-radius: 50px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .badge-campaign {
+        background: rgba(67, 97, 238, 0.2);
+        color: var(--primary);
+        border: 1px solid rgba(67, 97, 238, 0.3);
+    }
+
+    .badge-pitch {
+        background: rgba(46, 204, 113, 0.2);
+        color: var(--success);
+        border: 1px solid rgba(46, 204, 113, 0.3);
+    }
+
+    .badge-lead_score {
+        background: rgba(114, 9, 183, 0.2);
+        color: var(--secondary);
+        border: 1px solid rgba(114, 9, 183, 0.3);
+    }
+
+    .history-meta {
+        text-align: right;
+    }
+
+    .history-date {
+        font-size: 0.85rem;
+        color: var(--text-main);
+        font-weight: 500;
+    }
+
+    .history-time {
+        font-size: 0.75rem;
+        color: var(--text-muted);
+    }
+
+    .history-inputs {
+        background: rgba(0, 0, 0, 0.3);
+        border-radius: 8px;
+        padding: 1rem;
+        font-size: 0.85rem;
+    }
+
+    .history-inputs ul {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .history-inputs li {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .history-inputs strong {
+        color: var(--text-muted);
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .history-inputs span {
+        color: var(--text-main);
+    }
+
+    .history-result {
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        padding: 1rem;
+        font-size: 0.9rem;
+        line-height: 1.6;
+        color: var(--text-muted);
+        white-space: pre-wrap;
+        max-height: 150px;
+        overflow-y: hidden;
+        position: relative;
+        cursor: pointer;
+        transition: var(--transition);
+        flex-grow: 1;
+    }
+
+    .history-result::after {
+        content: 'Click to expand...';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        padding: 1rem 0 0.5rem;
+        background: linear-gradient(transparent, var(--bg-card) 70%);
+        color: var(--accent);
+        text-align: center;
+        font-size: 0.8rem;
+        font-weight: 600;
+    }
+
+    .history-result:hover {
+        border-color: rgba(255, 255, 255, 0.15);
+    }
+
+    .history-result.expanded {
+        max-height: none;
+    }
+
+    .history-result.expanded::after {
+        display: none;
+    }
+
+    .empty-history {
+        text-align: center;
+        padding: 5rem 2rem;
+        background: var(--bg-card);
+        border-radius: var(--border-radius-lg);
+        border: 1px dashed var(--border-color);
+    }
+
+    .empty-history i {
+        font-size: 4rem;
+        color: var(--text-muted);
+        margin-bottom: 1.5rem;
+        opacity: 0.5;
+    }
+
+    .empty-history h3 {
+        font-size: 1.5rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .empty-history p {
+        color: var(--text-muted);
+        margin-bottom: 2rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="history-header">
+    <div class="history-header-icon">
+        <i class="fa-solid fa-clock-rotate-left"></i>
+    </div>
+    <div>
+        <h1 class="page-title" style="margin-bottom: 0;">Generation History</h1>
+        <p class="page-subtitle">Review your past campaigns, pitches, and lead scores</p>
+    </div>
+</div>
+
+{% if history %}
+<div class="history-grid">
+    {% for item in history %}
+    <div class="glass-card history-card">
+        <div class="history-card-header">
+            <span class="badge badge-{{ item.tool }}">
+                {% if item.tool == 'campaign' %}<i class="fa-solid fa-bullhorn"></i> Campaign{% endif %}
+                {% if item.tool == 'pitch' %}<i class="fa-solid fa-microphone-lines"></i> Pitch{% endif %}
+                {% if item.tool == 'lead_score' %}<i class="fa-solid fa-chart-line"></i> Lead Score{% endif %}
+            </span>
+
+            <div class="history-meta">
+                <div class="history-date">{{ item.timestamp.strftime('%b %d, %Y') }}</div>
+                <div class="history-time">{{ item.timestamp.strftime('%I:%M %p') }}</div>
+            </div>
+        </div>
+
+        <div class="history-inputs">
+            <ul>
+                {% for key, value in item.parsed_data.items() %}
+                <li>
+                    <strong>{{ key.replace('_', ' ') }}</strong>
+                    <span>{{ value }}</span>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+
+        <div class="history-result" onclick="this.classList.toggle('expanded')">
+            {{ item.result }}
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="empty-history">
+    <i class="fa-solid fa-box-open"></i>
+    <h3>Your History is Empty</h3>
+    <p>You haven't generated any AI content yet. Head over to one of the tools to get started!</p>
+    <div class="d-flex justify-content-center gap-3">
+        <a href="/campaign" class="btn btn-primary"><i class="fa-solid fa-bullhorn"></i> Campaign</a>
+        <a href="/pitch" class="btn btn-secondary"><i class="fa-solid fa-microphone-lines"></i> Pitch</a>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

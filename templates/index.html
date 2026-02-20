@@ -1,17 +1,241 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-  <title>Market Suite</title>
-</head>
-<body>
-  <h1>Welcome to Market Suite</h1>
-  <p>Select a tool:</p>
-  <ul>
-    <li><a href="/campaign">Generate Campaign</a></li>
-    <li><a href="/pitch">Generate Pitch</a></li>
-    <li><a href="/lead">Lead Score</a></li>
-  </ul>
-</body>
-</html>
+{% extends "base.html" %}
+
+{% block title %}Dashboard - MarketAI Suite{% endblock %}
+
+{% block extra_css %}
+<style>
+  .hero-section {
+    margin-bottom: 3rem;
+    position: relative;
+  }
+
+  .hero-bg-effect {
+    position: absolute;
+    top: -50px;
+    right: 10%;
+    width: 300px;
+    height: 300px;
+    background: radial-gradient(circle, rgba(67, 97, 238, 0.15), transparent 70%);
+    border-radius: 50%;
+    z-index: -1;
+    filter: blur(30px);
+  }
+
+  .dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+    margin-top: 2rem;
+  }
+
+  .tool-card {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    padding: 2.5rem 2rem;
+    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.3s ease;
+    text-decoration: none;
+    color: inherit;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .tool-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: var(--card-accent, var(--primary));
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.4s ease;
+  }
+
+  .tool-card:hover {
+    transform: translateY(-10px);
+  }
+
+  .tool-card:hover::before {
+    transform: scaleX(1);
+  }
+
+  .tool-card-campaign {
+    --card-accent: var(--primary);
+  }
+
+  .tool-card-campaign:hover {
+    box-shadow: 0 15px 30px rgba(67, 97, 238, 0.15);
+    border-color: rgba(67, 97, 238, 0.3);
+  }
+
+  .tool-card-pitch {
+    --card-accent: var(--success);
+  }
+
+  .tool-card-pitch:hover {
+    box-shadow: 0 15px 30px rgba(46, 204, 113, 0.15);
+    border-color: rgba(46, 204, 113, 0.3);
+  }
+
+  .tool-card-lead {
+    --card-accent: var(--secondary);
+  }
+
+  .tool-card-lead:hover {
+    box-shadow: 0 15px 30px rgba(114, 9, 183, 0.15);
+    border-color: rgba(114, 9, 183, 0.3);
+  }
+
+  .tool-icon {
+    font-size: 2.5rem;
+    color: var(--card-accent, var(--primary));
+    margin-bottom: 1.5rem;
+    background: rgba(255, 255, 255, 0.05);
+    width: 70px;
+    height: 70px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+  }
+
+  .tool-title {
+    font-size: 1.5rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .tool-desc {
+    color: var(--text-muted);
+    font-size: 0.95rem;
+    line-height: 1.5;
+    flex-grow: 1;
+    margin-bottom: 1.5rem;
+  }
+
+  .tool-action {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--card-accent, var(--primary));
+    font-weight: 600;
+    font-size: 0.95rem;
+    font-family: var(--font-heading);
+  }
+
+  .tool-action i {
+    transition: transform 0.3s ease;
+  }
+
+  .tool-card:hover .tool-action i {
+    transform: translateX(5px);
+  }
+
+  /* Unauthorized State */
+  .hero-unauth {
+    text-align: center;
+    padding: 5rem 2rem;
+    max-width: 800px;
+    margin: 0 auto;
+  }
+
+  .hero-unauth h1 {
+    font-size: 3.5rem;
+    margin-bottom: 1.5rem;
+    background: linear-gradient(135deg, #fff, #a0a5b5);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .hero-unauth p {
+    font-size: 1.2rem;
+    color: var(--text-muted);
+    margin-bottom: 3rem;
+    line-height: 1.6;
+  }
+
+  .auth-actions {
+    display: flex;
+    gap: 1.5rem;
+    justify-content: center;
+  }
+
+  .auth-btn {
+    padding: 1rem 2.5rem;
+    font-size: 1.1rem;
+    min-width: 160px;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+{% if current_user.is_authenticated %}
+
+<div class="hero-section">
+  <div class="hero-bg-effect"></div>
+  <div class="page-header">
+    <h1 class="page-title">Welcome back, {{ current_user.username }}</h1>
+    <p class="page-subtitle">What would you like to generate today with MarketAI Suite?</p>
+  </div>
+</div>
+
+<div class="dashboard-grid">
+  <!-- Campaign Generation Card -->
+  <a href="/campaign" class="glass-card tool-card tool-card-campaign">
+    <div class="tool-icon">
+      <i class="fa-solid fa-bullhorn"></i>
+    </div>
+    <h3 class="tool-title">Campaign Generation</h3>
+    <p class="tool-desc">Create highly targeted, data-driven marketing campaigns instantly using Groq's LLaMA 3.3 model.
+    </p>
+    <div class="tool-action">
+      <span>Generate Campaign</span> <i class="fa-solid fa-arrow-right"></i>
+    </div>
+  </a>
+
+  <!-- Pitch Creation Card -->
+  <a href="/pitch" class="glass-card tool-card tool-card-pitch">
+    <div class="tool-icon">
+      <i class="fa-solid fa-microphone-lines"></i>
+    </div>
+    <h3 class="tool-title">Intelligent Pitch</h3>
+    <p class="tool-desc">Craft persuasive, customized sales pitches tailored to your specific customer personas and
+      products.</p>
+    <div class="tool-action">
+      <span>Create Pitch</span> <i class="fa-solid fa-arrow-right"></i>
+    </div>
+  </a>
+
+  <!-- Lead Scoring Card -->
+  <a href="/lead" class="glass-card tool-card tool-card-lead">
+    <div class="tool-icon">
+      <i class="fa-solid fa-chart-line"></i>
+    </div>
+    <h3 class="tool-title">Predictive Lead Score</h3>
+    <p class="tool-desc">Evaluate and dynamically score incoming leads based on budget, need, and urgency attributes.
+    </p>
+    <div class="tool-action">
+      <span>Score Leads</span> <i class="fa-solid fa-arrow-right"></i>
+    </div>
+  </a>
+</div>
+
+{% else %}
+
+<div class="hero-unauth">
+  <i class="fa-solid fa-brain"
+    style="font-size: 5rem; color: var(--primary); margin-bottom: 2rem; filter: drop-shadow(0 0 30px var(--primary-glow));"></i>
+  <h1>Intelligence for Sales & Marketing</h1>
+  <p>MarketAI Suite is an intelligent platform leveraging advanced AI to provide comprehensive campaign generation,
+    pitch creation, and predictive lead scoring.</p>
+
+  <div class="auth-actions">
+    <a href="/login" class="btn btn-primary auth-btn">Login</a>
+    <a href="/register" class="btn btn-secondary auth-btn">Register</a>
+  </div>
+</div>
+
+{% endif %}
+{% endblock %}

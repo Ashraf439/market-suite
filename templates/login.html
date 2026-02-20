@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+
+{% block title %}Login - MarketAI Suite{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* Specific styling for auth pages */
+  .auth-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: calc(100vh - 100px);
+  }
+
+  .auth-card {
+    width: 100%;
+    max-width: 450px;
+    position: relative;
+  }
+
+  .auth-card::before {
+    content: '';
+    position: absolute;
+    top: -20px;
+    right: -20px;
+    bottom: -20px;
+    left: -20px;
+    background: radial-gradient(circle at top right, rgba(67, 97, 238, 0.2), transparent 50%),
+      radial-gradient(circle at bottom left, rgba(114, 9, 183, 0.2), transparent 50%);
+    z-index: -1;
+    border-radius: calc(var(--border-radius-lg) + 10px);
+    filter: blur(20px);
+  }
+
+  .auth-header {
+    text-align: center;
+    margin-bottom: 2rem;
+  }
+
+  .auth-header i {
+    font-size: 3rem;
+    color: var(--primary);
+    margin-bottom: 1rem;
+    filter: drop-shadow(0 0 10px var(--primary-glow));
+  }
+
+  .auth-title {
+    font-size: 1.8rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .auth-subtitle {
+    color: var(--text-muted);
+    font-size: 0.95rem;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="auth-wrapper">
+  <div class="glass-card auth-card">
+    <div class="auth-header">
+      <i class="fa-solid fa-brain"></i>
+      <h2 class="auth-title">Welcome Back</h2>
+      <p class="auth-subtitle">Login to access your intelligent marketing tools</p>
+    </div>
+
+    <form method="POST" action="/login">
+      <div class="form-group">
+        <label for="username" class="form-label">Username</label>
+        <input type="text" id="username" name="username" class="form-control" required
+          placeholder="Enter your username">
+      </div>
+
+      <div class="form-group mb-4">
+        <label for="password" class="form-label">Password</label>
+        <input type="password" id="password" name="password" class="form-control" required
+          placeholder="Enter your password">
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-block mb-3">
+        <span>Login Securely</span>
+        <i class="fa-solid fa-arrow-right ml-2"></i>
+      </button>
+    </form>
+
+    <div class="text-center mt-4">
+      <p class="text-muted" style="font-size: 0.9rem;">
+        Don't have an account? <a href="/register" style="font-weight: 600;">Create one now</a>
+      </p>
+    </div>
+  </div>
+</div>
+{% endblock %}

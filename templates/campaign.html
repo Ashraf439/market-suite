@@ -1,32 +1,264 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-  <title>Generate Campaign</title>
-</head>
-<body>
-  <h2>Generate Campaign</h2>
-  <form id="campaignForm">
-    <label>Product: <input type="text" name="product" required></label><br>
-    <label>Audience: <input type="text" name="audience" required></label><br>
-    <label>Platform: <input type="text" name="platform" required></label><br>
-    <button type="submit">Generate</button>
-  </form>
-  <div id="campaignResult"></div>
+{% extends "base.html" %}
 
-  <script>
-    document.getElementById("campaignForm").addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const data = Object.fromEntries(new FormData(e.target).entries());
-      const res = await fetch("/generate_campaign", {
+{% block title %}Campaign Tool - MarketAI Suite{% endblock %}
+
+{% block extra_css %}
+<style>
+  .tool-header {
+    margin-bottom: 2rem;
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+  }
+
+  .tool-header-icon {
+    font-size: 2.5rem;
+    color: var(--primary);
+    background: rgba(67, 97, 238, 0.1);
+    width: 80px;
+    height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 20px;
+    box-shadow: 0 0 20px rgba(67, 97, 238, 0.2);
+  }
+
+  .layout-grid {
+    display: grid;
+    grid-template-columns: 1fr 1.5fr;
+    gap: 2rem;
+  }
+
+  @media (max-width: 900px) {
+    .layout-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .input-panel {
+    position: sticky;
+    top: 2rem;
+    height: max-content;
+  }
+
+  .result-panel {
+    display: flex;
+    flex-direction: column;
+    min-height: 500px;
+  }
+
+  .result-content {
+    flex: 1;
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    padding: 1.5rem;
+    color: var(--text-main);
+    white-space: pre-wrap;
+    line-height: 1.6;
+    overflow-y: auto;
+    font-size: 0.95rem;
+  }
+
+  .empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: var(--text-muted);
+    text-align: center;
+  }
+
+  .empty-state i {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    opacity: 0.5;
+  }
+
+  .loader {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: var(--primary);
+  }
+
+  .spinner {
+    width: 50px;
+    height: 50px;
+    border: 3px solid rgba(67, 97, 238, 0.3);
+    border-radius: 50%;
+    border-top-color: var(--primary);
+    animation: spin 1s ease-in-out infinite;
+    margin-bottom: 1rem;
+  }
+
+  @keyframes spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  .pulse-text {
+    animation: pulse 1.5s infinite;
+    font-weight: 500;
+    letter-spacing: 1px;
+  }
+
+  @keyframes pulse {
+    0% {
+      opacity: 0.6;
+    }
+
+    50% {
+      opacity: 1;
+    }
+
+    100% {
+      opacity: 0.6;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="tool-header">
+  <div class="tool-header-icon">
+    <i class="fa-solid fa-bullhorn"></i>
+  </div>
+  <div>
+    <h1 class="page-title" style="margin-bottom: 0;">Campaign Generator</h1>
+    <p class="page-subtitle">Develop targeted marketing strategies powered by Groq LLaMA 3.3</p>
+  </div>
+</div>
+
+<div class="layout-grid">
+  <!-- Input Panel -->
+  <div class="glass-card input-panel">
+    <h3 style="margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem;">
+      <i class="fa-solid fa-sliders"></i> Parameters
+    </h3>
+
+    <form id="campaignForm">
+      <div class="form-group">
+        <label for="product" class="form-label">Product/Service Name</label>
+        <input type="text" id="product" class="form-control" placeholder="e.g. MarketAI Pro Subscription" required>
+      </div>
+
+      <div class="form-group">
+        <label for="audience" class="form-label">Target Audience</label>
+        <input type="text" id="audience" class="form-control" placeholder="e.g. B2B SaaS Founders, 30-45yo" required>
+      </div>
+
+      <div class="form-group">
+        <label for="platform" class="form-label">Primary Platform</label>
+        <select id="platform" class="form-control" required>
+          <option value="" disabled selected>Select a platform...</option>
+          <option value="LinkedIn">LinkedIn</option>
+          <option value="Twitter">Twitter / X</option>
+          <option value="Instagram">Instagram</option>
+          <option value="Email Newsletter">Email Newsletter</option>
+          <option value="Google Ads">Google Ads</option>
+        </select>
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-block mt-2">
+        <i class="fa-solid fa-wand-magic-sparkles"></i> Generate Campaign
+      </button>
+    </form>
+  </div>
+
+  <!-- Output Panel -->
+  <div class="glass-card result-panel">
+    <h3 style="margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem; justify-content: space-between;">
+      <span><i class="fa-solid fa-file-lines"></i> AI Output</span>
+      <button class="btn btn-secondary" id="copyBtn" style="padding: 0.4rem 0.8rem; font-size: 0.85rem; display: none;">
+        <i class="fa-regular fa-copy"></i> Copy
+      </button>
+    </h3>
+
+    <div id="resultContent" class="result-content">
+      <!-- Empty State -->
+      <div class="empty-state" id="emptyState">
+        <i class="fa-solid fa-robot"></i>
+        <p>Configure parameters and click generate to see AI proposals.</p>
+      </div>
+
+      <!-- Loader -->
+      <div class="loader" id="loader">
+        <div class="spinner"></div>
+        <div class="pulse-text">LLaMA 3.3 is analyzing data...</div>
+      </div>
+
+      <!-- Actual Result -->
+      <div id="resultText" style="display: none;"></div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  document.getElementById("campaignForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const product = document.getElementById("product").value;
+    const audience = document.getElementById("audience").value;
+    const platform = document.getElementById("platform").value;
+
+    const emptyState = document.getElementById("emptyState");
+    const loader = document.getElementById("loader");
+    const resultText = document.getElementById("resultText");
+    const copyBtn = document.getElementById("copyBtn");
+
+    // Show loader, hide others
+    emptyState.style.display = "none";
+    resultText.style.display = "none";
+    copyBtn.style.display = "none";
+    loader.style.display = "flex";
+
+    try {
+      const response = await fetch("/generate_campaign", {
         method: "POST",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify(data)
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ product, audience, platform })
       });
-      const json = await res.json();
-      document.getElementById("campaignResult").textContent = json.result || JSON.stringify(json);
-    });
-  </script>
-</body>
-</html>
+      const data = await response.json();
+
+      // Show result
+      loader.style.display = "none";
+      resultText.innerText = data.result || data.error;
+      resultText.style.display = "block";
+
+      if (data.result) {
+        copyBtn.style.display = "inline-flex";
+      }
+    } catch (error) {
+      loader.style.display = "none";
+      resultText.innerText = "Error connecting to server.";
+      resultText.style.display = "block";
+      resultText.style.color = "var(--danger)";
+    }
+  });
+
+  document.getElementById("copyBtn").addEventListener("click", () => {
+    const text = document.getElementById("resultText").innerText;
+    navigator.clipboard.writeText(text);
+
+    const btn = document.getElementById("copyBtn");
+    const originalHtml = btn.innerHTML;
+    btn.innerHTML = '<i class="fa-solid fa-check"></i> Copied!';
+    btn.style.color = "var(--success)";
+    btn.style.borderColor = "var(--success)";
+
+    setTimeout(() => {
+      btn.innerHTML = originalHtml;
+      btn.style.color = "";
+      btn.style.borderColor = "";
+    }, 2000);
+  });
+</script>
+{% endblock %}
