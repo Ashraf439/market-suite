@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <title>Generate Campaign</title>
+</head>
+<body>
+  <h2>Generate Campaign</h2>
+  <form id="campaignForm">
+    <label>Product: <input type="text" name="product" required></label><br>
+    <label>Audience: <input type="text" name="audience" required></label><br>
+    <label>Platform: <input type="text" name="platform" required></label><br>
+    <button type="submit">Generate</button>
+  </form>
+  <div id="campaignResult"></div>
+
+  <script>
+    document.getElementById("campaignForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const data = Object.fromEntries(new FormData(e.target).entries());
+      const res = await fetch("/generate_campaign", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify(data)
+      });
+      const json = await res.json();
+      document.getElementById("campaignResult").textContent = json.result || JSON.stringify(json);
+    });
+  </script>
+</body>
+</html>

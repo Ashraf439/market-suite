@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <title>Lead Score</title>
+</head>
+<body>
+  <h2>Lead Score</h2>
+  <form id="leadForm">
+    <label>Name: <input type="text" name="name" required></label><br>
+    <label>Budget: <input type="text" name="budget" required></label><br>
+    <label>Need: <input type="text" name="need" required></label><br>
+    <label>Urgency: <input type="text" name="urgency" required></label><br>
+    <button type="submit">Score Lead</button>
+  </form>
+  <div id="leadResult"></div>
+
+  <script>
+    document.getElementById("leadForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const data = Object.fromEntries(new FormData(e.target).entries());
+      const res = await fetch("/lead_score", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify(data)
+      });
+      const json = await res.json();
+      document.getElementById("leadResult").textContent = json.result || JSON.stringify(json);
+    });
+  </script>
+</body>
+</html>

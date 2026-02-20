@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <title>Generate Pitch</title>
+</head>
+<body>
+  <h2>Generate Pitch</h2>
+  <form id="pitchForm">
+    <label>Product: <input type="text" name="product" required></label><br>
+    <label>Customer Persona: <input type="text" name="customer" required></label><br>
+    <button type="submit">Generate</button>
+  </form>
+  <div id="pitchResult"></div>
+
+  <script>
+    document.getElementById("pitchForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const data = Object.fromEntries(new FormData(e.target).entries());
+      const res = await fetch("/generate_pitch", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify(data)
+      });
+      const json = await res.json();
+      document.getElementById("pitchResult").textContent = json.result || JSON.stringify(json);
+    });
+  </script>
+</body>
+</html>
