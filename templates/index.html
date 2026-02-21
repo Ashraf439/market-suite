@@ -1,0 +1,371 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — MarketAI Suite{% endblock %}
+
+{% block extra_styles %}
+.hero {
+    padding: 3.5rem 2rem 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+    position: relative;
+}
+
+.hero-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(0,212,255,0.08);
+    border: 1px solid rgba(0,212,255,0.2);
+    border-radius: 20px;
+    padding: 5px 14px;
+    font-size: 0.75rem;
+    color: var(--accent-cyan);
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 1.25rem;
+}
+
+.hero-label .dot {
+    width: 6px; height: 6px;
+    background: var(--accent-cyan);
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+}
+
+.hero h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: 2.6rem;
+    font-weight: 800;
+    line-height: 1.2;
+    margin-bottom: 1rem;
+    max-width: 620px;
+}
+
+.hero h1 .gradient-text {
+    background: linear-gradient(135deg, #e8f4ff 0%, var(--accent-cyan) 50%, var(--blue-bright) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.hero p {
+    color: var(--text-secondary);
+    font-size: 1rem;
+    max-width: 500px;
+    line-height: 1.6;
+    margin-bottom: 2rem;
+}
+
+.hero-actions {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+/* STAT STRIP */
+.stat-strip {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 2rem 2rem;
+}
+
+.stat-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    transition: all 0.25s;
+    animation: slideUp 0.5s ease both;
+}
+
+.stat-card:hover {
+    border-color: var(--border-bright);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-blue);
+}
+
+.stat-icon {
+    width: 44px; height: 44px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+}
+
+.stat-icon.blue { background: rgba(10,108,245,0.15); color: var(--blue-bright); }
+.stat-icon.cyan { background: rgba(0,212,255,0.1); color: var(--accent-cyan); }
+.stat-icon.teal { background: rgba(14,245,212,0.1); color: var(--accent-teal); }
+.stat-icon.purple { background: rgba(139,92,246,0.12); color: #a78bfa; }
+
+.stat-val {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.6rem;
+    font-weight: 800;
+    color: var(--text-primary);
+    line-height: 1;
+}
+
+.stat-label {
+    color: var(--text-muted);
+    font-size: 0.78rem;
+    margin-top: 3px;
+}
+
+/* FEATURE CARDS */
+.features-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.25rem;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 2rem 3rem;
+}
+
+.feature-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: 28px;
+    text-decoration: none;
+    color: inherit;
+    transition: all 0.3s;
+    display: block;
+    position: relative;
+    overflow: hidden;
+    animation: slideUp 0.5s ease both;
+}
+
+.feature-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: var(--card-accent, linear-gradient(90deg, var(--blue-primary), var(--accent-cyan)));
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+.feature-card:hover {
+    border-color: var(--border-bright);
+    transform: translateY(-4px);
+    box-shadow: 0 12px 40px rgba(0,0,0,0.3), var(--shadow-blue);
+}
+
+.feature-card:hover::before { opacity: 1; }
+
+.feature-icon-wrap {
+    width: 54px; height: 54px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    margin-bottom: 18px;
+}
+
+.feature-icon-blue { background: rgba(10,108,245,0.15); color: var(--blue-bright); }
+.feature-icon-cyan { background: rgba(0,212,255,0.1); color: var(--accent-cyan); }
+.feature-icon-teal { background: rgba(14,245,212,0.1); color: var(--accent-teal); }
+
+.feature-card h3 {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin-bottom: 8px;
+    color: var(--text-primary);
+}
+
+.feature-card p {
+    color: var(--text-secondary);
+    font-size: 0.865rem;
+    line-height: 1.6;
+    margin-bottom: 18px;
+}
+
+.feature-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 18px; }
+
+.feature-tag {
+    background: rgba(10,108,245,0.1);
+    border: 1px solid rgba(10,108,245,0.2);
+    color: var(--text-secondary);
+    font-size: 0.72rem;
+    padding: 3px 8px;
+    border-radius: 6px;
+}
+
+.feature-cta {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--accent-cyan);
+    font-size: 0.85rem;
+    font-weight: 600;
+    transition: gap 0.2s;
+}
+
+.feature-card:hover .feature-cta { gap: 10px; }
+
+/* PLATFORMS SECTION */
+.section-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 0.7rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 1rem;
+}
+
+.platforms-section {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 2rem 3rem;
+}
+
+.platforms-row {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.platform-chip {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: var(--text-secondary);
+    font-size: 0.825rem;
+    font-weight: 500;
+    transition: all 0.2s;
+    cursor: default;
+}
+
+.platform-chip:hover {
+    border-color: var(--border-bright);
+    color: var(--text-primary);
+    background: rgba(10,108,245,0.08);
+}
+
+.platform-chip i { font-size: 14px; }
+
+@media (max-width: 768px) {
+    .stat-strip { grid-template-columns: repeat(2, 1fr); }
+    .features-grid { grid-template-columns: 1fr; }
+    .hero h1 { font-size: 2rem; }
+}
+{% endblock %}
+
+{% block content %}
+<!-- HERO -->
+<div class="hero animate-in">
+    <div class="hero-label"><div class="dot"></div> AI-Powered Platform</div>
+    <h1>
+        Intelligent Sales &<br>
+        <span class="gradient-text">Marketing Suite</span>
+    </h1>
+    <p>Generate high-performing campaigns, craft compelling pitches, and qualify leads with advanced AI technology powered by Groq's LLaMA 3.3 70B.</p>
+    <div class="hero-actions">
+        <a href="{{ url_for('campaign') }}"><button class="btn-primary"><i class="fas fa-rocket"></i> Get Started</button></a>
+        <a href="{{ url_for('history') }}"><button class="btn-secondary"><i class="fas fa-clock"></i> View History</button></a>
+    </div>
+</div>
+
+<!-- STATS -->
+<div class="stat-strip">
+    <div class="stat-card delay-1">
+        <div class="stat-icon blue"><i class="fas fa-bullhorn"></i></div>
+        <div>
+            <div class="stat-val">{{ stats.campaigns if stats else 0 }}</div>
+            <div class="stat-label">Campaigns Generated</div>
+        </div>
+    </div>
+    <div class="stat-card delay-2">
+        <div class="stat-icon cyan"><i class="fas fa-microphone"></i></div>
+        <div>
+            <div class="stat-val">{{ stats.pitches if stats else 0 }}</div>
+            <div class="stat-label">Pitches Created</div>
+        </div>
+    </div>
+    <div class="stat-card delay-3">
+        <div class="stat-icon teal"><i class="fas fa-star"></i></div>
+        <div>
+            <div class="stat-val">{{ stats.leads if stats else 0 }}</div>
+            <div class="stat-label">Leads Scored</div>
+        </div>
+    </div>
+    <div class="stat-card delay-4">
+        <div class="stat-icon purple"><i class="fas fa-bolt"></i></div>
+        <div>
+            <div class="stat-val">~2s</div>
+            <div class="stat-label">Avg. Response Time</div>
+        </div>
+    </div>
+</div>
+
+<!-- FEATURE CARDS -->
+<div class="features-grid">
+    <a href="{{ url_for('campaign') }}" class="feature-card delay-1" style="--card-accent: linear-gradient(90deg, #0a6cf5, #2c8dff)">
+        <div class="feature-icon-wrap feature-icon-blue"><i class="fas fa-bullhorn"></i></div>
+        <h3>Campaign Generator</h3>
+        <p>Create data-driven marketing campaigns tailored to your specific audience and platform with AI-powered insights.</p>
+        <div class="feature-tags">
+            <span class="feature-tag">Content Ideas</span>
+            <span class="feature-tag">Ad Copy</span>
+            <span class="feature-tag">CTA Suggestions</span>
+            <span class="feature-tag">Strategy</span>
+        </div>
+        <div class="feature-cta">Launch Campaign <i class="fas fa-arrow-right"></i></div>
+    </a>
+
+    <a href="{{ url_for('pitch') }}" class="feature-card delay-2" style="--card-accent: linear-gradient(90deg, #00d4ff, #0ef5d4)">
+        <div class="feature-icon-wrap feature-icon-cyan"><i class="fas fa-microphone"></i></div>
+        <h3>Sales Pitch Creator</h3>
+        <p>Craft compelling, personalized sales pitches that resonate with your target customers and drive conversions.</p>
+        <div class="feature-tags">
+            <span class="feature-tag">Elevator Pitch</span>
+            <span class="feature-tag">Value Prop</span>
+            <span class="feature-tag">Differentiators</span>
+            <span class="feature-tag">CTA</span>
+        </div>
+        <div class="feature-cta" style="color:var(--accent-cyan)">Create Pitch <i class="fas fa-arrow-right"></i></div>
+    </a>
+
+    <a href="{{ url_for('lead') }}" class="feature-card delay-3" style="--card-accent: linear-gradient(90deg, #0ef5d4, #00d4ff)">
+        <div class="feature-icon-wrap feature-icon-teal"><i class="fas fa-star"></i></div>
+        <h3>Lead Qualifier</h3>
+        <p>Identify and prioritize high-value leads using intelligent scoring to maximize your sales efficiency.</p>
+        <div class="feature-tags">
+            <span class="feature-tag">Score 0–100</span>
+            <span class="feature-tag">Budget Analysis</span>
+            <span class="feature-tag">Conversion %</span>
+            <span class="feature-tag">Reasoning</span>
+        </div>
+        <div class="feature-cta" style="color:var(--accent-teal)">Score Leads <i class="fas fa-arrow-right"></i></div>
+    </a>
+</div>
+
+<!-- PLATFORMS -->
+<div class="platforms-section animate-in">
+    <div class="section-title">Supported Platforms</div>
+    <div class="platforms-row">
+        <div class="platform-chip"><i class="fab fa-linkedin" style="color:#0077b5"></i> LinkedIn</div>
+        <div class="platform-chip"><i class="fab fa-facebook" style="color:#1877f2"></i> Facebook</div>
+        <div class="platform-chip"><i class="fab fa-instagram" style="color:#e1306c"></i> Instagram</div>
+        <div class="platform-chip"><i class="fab fa-twitter" style="color:#1da1f2"></i> Twitter/X</div>
+        <div class="platform-chip"><i class="fab fa-youtube" style="color:#ff0000"></i> YouTube</div>
+        <div class="platform-chip"><i class="fas fa-envelope" style="color:var(--accent-cyan)"></i> Email</div>
+        <div class="platform-chip"><i class="fab fa-tiktok" style="color:#ee1d52"></i> TikTok</div>
+        <div class="platform-chip"><i class="fab fa-whatsapp" style="color:#25d366"></i> WhatsApp</div>
+    </div>
+</div>
+{% endblock %}

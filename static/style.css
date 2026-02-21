@@ -1,0 +1,24 @@
+.text-cyan { color: var(--accent-cyan); }
+.text-muted { color: var(--text-muted); }
+.text-primary { color: var(--text-primary); }
+.text-secondary { color: var(--text-secondary); }
+
+.fw-bold { font-weight: 700; }
+.fw-semibold { font-weight: 600; }
+
+.mt-1 { margin-top: 0.5rem; }
+.mt-2 { margin-top: 1rem; }
+.mt-3 { margin-top: 1.5rem; }
+
+/* Highlight text in result boxes */
+.result-content strong {
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+/* Responsive nav */
+@media (max-width: 768px) {
+    nav { flex-wrap: wrap; height: auto; padding: 10px 1rem; gap: 8px; }
+    .nav-links { order: 3; width: 100%; justify-content: center; }
+    .page-header, .page-content { padding-left: 1rem; padding-right: 1rem; }
+}
