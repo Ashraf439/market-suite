@@ -1,252 +1,218 @@
 {% extends "base.html" %}
+{% block title %}Sales Pitch Creator — MarketAI Suite{% endblock %}
 
-{% block title %}Pitch Tool - MarketAI Suite{% endblock %}
-
-{% block extra_css %}
-<style>
-  .tool-header {
-    margin-bottom: 2rem;
-    display: flex;
-    align-items: center;
-    gap: 1.5rem;
-  }
-
-  .tool-header-icon {
-    font-size: 2.5rem;
-    color: var(--success);
-    background: rgba(46, 204, 113, 0.1);
-    width: 80px;
-    height: 80px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 20px;
-    box-shadow: 0 0 20px rgba(46, 204, 113, 0.2);
-  }
-
-  .layout-grid {
+{% block extra_styles %}
+.two-col {
     display: grid;
-    grid-template-columns: 1fr 1.5fr;
-    gap: 2rem;
-  }
+    grid-template-columns: 420px 1fr;
+    gap: 1.5rem;
+    align-items: start;
+}
 
-  @media (max-width: 900px) {
-    .layout-grid {
-      grid-template-columns: 1fr;
-    }
-  }
+.result-section {
+    background: var(--bg-card2);
+    border: 1px solid var(--border-bright);
+    border-radius: 16px;
+    padding: 24px;
+    animation: fadeIn 0.4s ease;
+    position: relative;
+}
 
-  .input-panel {
-    position: sticky;
-    top: 2rem;
-    height: max-content;
-  }
-
-  .result-panel {
+.result-section h3 {
+    font-family: 'Syne', sans-serif;
+    font-size: 0.7rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent-cyan);
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
     display: flex;
-    flex-direction: column;
-    min-height: 500px;
-  }
+    align-items: center;
+    gap: 8px;
+}
 
-  .result-content {
-    flex: 1;
-    background: rgba(0, 0, 0, 0.2);
-    border: 1px solid rgba(255, 255, 255, 0.05);
-    border-radius: 8px;
-    padding: 1.5rem;
-    color: var(--text-main);
+.result-content {
+    color: var(--text-secondary);
+    font-size: 0.88rem;
+    line-height: 1.8;
     white-space: pre-wrap;
-    line-height: 1.6;
-    overflow-y: auto;
-    font-size: 0.95rem;
-  }
+}
 
-  .empty-state {
+.copy-btn {
+    position: absolute;
+    top: 16px; right: 16px;
+    background: rgba(10,108,245,0.1);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 6px 12px;
+    color: var(--text-secondary);
+    font-size: 0.75rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: 'DM Sans', sans-serif;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.copy-btn:hover { background: rgba(10,108,245,0.2); color: var(--text-primary); }
+
+.placeholder-state {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    height: 100%;
+    height: 280px;
     color: var(--text-muted);
     text-align: center;
-  }
+    gap: 12px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+}
 
-  .empty-state i {
-    font-size: 3rem;
-    margin-bottom: 1rem;
-    opacity: 0.5;
-  }
+.placeholder-state i { font-size: 36px; opacity: 0.3; }
+.placeholder-state p { font-size: 0.875rem; max-width: 240px; }
 
-  .loader {
-    display: none;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    height: 100%;
-    color: var(--success);
-  }
+.info-tip {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    background: rgba(0,212,255,0.05);
+    border: 1px solid rgba(0,212,255,0.15);
+    border-radius: 10px;
+    padding: 12px 14px;
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    margin-top: 1rem;
+}
 
-  .spinner {
-    width: 50px;
-    height: 50px;
-    border: 3px solid rgba(46, 204, 113, 0.3);
-    border-radius: 50%;
-    border-top-color: var(--success);
-    animation: spin 1s ease-in-out infinite;
-    margin-bottom: 1rem;
-  }
+.info-tip i { color: var(--accent-cyan); margin-top: 2px; flex-shrink: 0; }
 
-  @keyframes spin {
-    to {
-      transform: rotate(360deg);
-    }
-  }
-
-  .pulse-text {
-    animation: pulse 1.5s infinite;
-    font-weight: 500;
-    letter-spacing: 1px;
-  }
-
-  @keyframes pulse {
-    0% {
-      opacity: 0.6;
-    }
-
-    50% {
-      opacity: 1;
-    }
-
-    100% {
-      opacity: 0.6;
-    }
-  }
-</style>
+@media(max-width: 900px) { .two-col { grid-template-columns: 1fr; } }
 {% endblock %}
 
 {% block content %}
-<div class="tool-header">
-  <div class="tool-header-icon">
-    <i class="fa-solid fa-microphone-lines"></i>
-  </div>
-  <div>
-    <h1 class="page-title" style="margin-bottom: 0;">Pitch Creator</h1>
-    <p class="page-subtitle">Craft persuasive, tailored sales pitches to land high-value deals</p>
-  </div>
+<div class="page-header animate-in">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
+        <div style="width:36px;height:36px;background:rgba(0,212,255,0.1);border-radius:10px;display:flex;align-items:center;justify-content:center;color:var(--accent-cyan)">
+            <i class="fas fa-microphone"></i>
+        </div>
+        <h1>Sales Pitch Creator</h1>
+    </div>
+    <p>Craft compelling, personalized sales pitches for your target customers</p>
 </div>
 
-<div class="layout-grid">
-  <!-- Input Panel -->
-  <div class="glass-card input-panel">
-    <h3 style="margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem;">
-      <i class="fa-solid fa-sliders"></i> Parameters
-    </h3>
+<div class="page-content">
+    <div class="two-col">
+        <!-- FORM -->
+        <div class="card animate-in">
+            <form id="pitchForm">
+                <div class="form-group">
+                    <label class="form-label">Product Name</label>
+                    <input type="text" id="product" name="product" class="form-input" placeholder="e.g., Cloud-based inventory management system" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Customer Persona</label>
+                    <textarea id="customer" name="customer" class="form-textarea" placeholder="e.g., Operations Director, Fortune 500 retail company, scaling operations across 500 stores" style="min-height:110px" required></textarea>
+                </div>
 
-    <form id="pitchForm">
-      <div class="form-group">
-        <label for="product" class="form-label">Product/Service Details</label>
-        <textarea id="product" class="form-control" rows="3"
-          placeholder="Describe the core features and value of what you are selling" required></textarea>
-      </div>
+                <div class="info-tip">
+                    <i class="fas fa-lightbulb"></i>
+                    <span>Include the customer's title, company type, and key challenges for a more personalized pitch.</span>
+                </div>
 
-      <div class="form-group">
-        <label for="customer" class="form-label">Customer Persona</label>
-        <input type="text" id="customer" class="form-control" placeholder="e.g. CMO focused on ROI and fast deployment"
-          required>
-      </div>
+                <div style="display:flex;gap:10px;margin-top:1.25rem">
+                    <button type="submit" class="btn-primary" style="flex:1;justify-content:center">
+                        <i class="fas fa-microphone"></i> Generate Pitch
+                    </button>
+                    <button type="button" class="btn-secondary" onclick="clearForm()">Clear</button>
+                </div>
+            </form>
 
-      <button type="submit" class="btn btn-primary btn-block mt-3"
-        style="background: linear-gradient(135deg, var(--success), #27ae60); box-shadow: 0 4px 12px rgba(46, 204, 113, 0.3);">
-        <i class="fa-solid fa-wand-magic-sparkles"></i> Create Pitch
-      </button>
-    </form>
-  </div>
+            <div class="loading-indicator" id="loadingPitch">
+                <div class="spinner"></div>
+                <span>Crafting your sales pitch...</span>
+            </div>
 
-  <!-- Output Panel -->
-  <div class="glass-card result-panel">
-    <h3 style="margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem; justify-content: space-between;">
-      <span><i class="fa-solid fa-file-lines"></i> AI Output</span>
-      <button class="btn btn-secondary" id="copyBtn" style="padding: 0.4rem 0.8rem; font-size: 0.85rem; display: none;">
-        <i class="fa-regular fa-copy"></i> Copy
-      </button>
-    </h3>
+            <!-- RESPONSE COMPONENTS INFO -->
+            <div style="margin-top:1.5rem">
+                <div style="font-size:0.72rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-muted);margin-bottom:10px">Response Includes</div>
+                <div style="display:flex;flex-direction:column;gap:7px">
+                    <div style="display:flex;align-items:center;gap:8px;font-size:0.8rem;color:var(--text-secondary)">
+                        <i class="fas fa-check-circle" style="color:var(--accent-teal);font-size:12px"></i> 30-Second Elevator Pitch
+                    </div>
+                    <div style="display:flex;align-items:center;gap:8px;font-size:0.8rem;color:var(--text-secondary)">
+                        <i class="fas fa-check-circle" style="color:var(--accent-teal);font-size:12px"></i> Clear Value Proposition
+                    </div>
+                    <div style="display:flex;align-items:center;gap:8px;font-size:0.8rem;color:var(--text-secondary)">
+                        <i class="fas fa-check-circle" style="color:var(--accent-teal);font-size:12px"></i> Key Differentiators
+                    </div>
+                    <div style="display:flex;align-items:center;gap:8px;font-size:0.8rem;color:var(--text-secondary)">
+                        <i class="fas fa-check-circle" style="color:var(--accent-teal);font-size:12px"></i> Strategic Call-to-Action
+                    </div>
+                </div>
+            </div>
+        </div>
 
-    <div id="resultContent" class="result-content">
-      <!-- Empty State -->
-      <div class="empty-state" id="emptyState">
-        <i class="fa-solid fa-robot"></i>
-        <p>Provide product and persona details to generate a custom pitch.</p>
-      </div>
-
-      <!-- Loader -->
-      <div class="loader" id="loader">
-        <div class="spinner"></div>
-        <div class="pulse-text">LLaMA 3.3 is drafting your pitch...</div>
-      </div>
-
-      <!-- Actual Result -->
-      <div id="resultText" style="display: none;"></div>
+        <!-- RESULT -->
+        <div id="resultBox">
+            <div class="placeholder-state">
+                <i class="fas fa-microphone"></i>
+                <p>Your personalized sales pitch will appear here</p>
+            </div>
+        </div>
     </div>
-  </div>
 </div>
 {% endblock %}
 
-{% block extra_js %}
+{% block scripts %}
 <script>
-  document.getElementById("pitchForm").addEventListener("submit", async (e) => {
+function clearForm() {
+    document.getElementById('pitchForm').reset();
+    document.getElementById('resultBox').innerHTML = `
+        <div class="placeholder-state">
+            <i class="fas fa-microphone"></i>
+            <p>Your personalized sales pitch will appear here</p>
+        </div>`;
+}
+
+document.getElementById('pitchForm').addEventListener('submit', async (e) => {
     e.preventDefault();
+    const loading = document.getElementById('loadingPitch');
+    const resultBox = document.getElementById('resultBox');
+    const formData = new FormData(e.target);
 
-    const product = document.getElementById("product").value;
-    const customer = document.getElementById("customer").value;
-
-    const emptyState = document.getElementById("emptyState");
-    const loader = document.getElementById("loader");
-    const resultText = document.getElementById("resultText");
-    const copyBtn = document.getElementById("copyBtn");
-
-    emptyState.style.display = "none";
-    resultText.style.display = "none";
-    copyBtn.style.display = "none";
-    loader.style.display = "flex";
+    loading.classList.add('active');
+    resultBox.innerHTML = '';
 
     try {
-      const response = await fetch("/generate_pitch", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ product, customer })
-      });
-      const data = await response.json();
+        const response = await fetch('/generate_pitch', { method: 'POST', body: formData });
+        const data = await response.json();
+        loading.classList.remove('active');
 
-      loader.style.display = "none";
-      resultText.innerText = data.result || data.error;
-      resultText.style.display = "block";
-
-      if (data.result) {
-        copyBtn.style.display = "inline-flex";
-      }
-    } catch (error) {
-      loader.style.display = "none";
-      resultText.innerText = "Error connecting to server.";
-      resultText.style.display = "block";
-      resultText.style.color = "var(--danger)";
+        resultBox.innerHTML = `
+            <div class="result-section">
+                <h3><i class="fas fa-star"></i> Your Sales Pitch</h3>
+                <button class="copy-btn" onclick="copyResult()"><i class="fas fa-copy"></i> Copy</button>
+                <div class="result-content" id="resultContent">${data.result || data.error || 'An error occurred.'}</div>
+            </div>`;
+    } catch (err) {
+        loading.classList.remove('active');
+        resultBox.innerHTML = `<div class="result-section"><div style="color:#fca5a5"><i class="fas fa-exclamation-circle"></i> Error generating pitch. Please try again.</div></div>`;
     }
-  });
+});
 
-  document.getElementById("copyBtn").addEventListener("click", () => {
-    const text = document.getElementById("resultText").innerText;
-    navigator.clipboard.writeText(text);
-
-    const btn = document.getElementById("copyBtn");
-    const originalHtml = btn.innerHTML;
-    btn.innerHTML = '<i class="fa-solid fa-check"></i> Copied!';
-    btn.style.color = "var(--success)";
-    btn.style.borderColor = "var(--success)";
-
-    setTimeout(() => {
-      btn.innerHTML = originalHtml;
-      btn.style.color = "";
-      btn.style.borderColor = "";
-    }, 2000);
-  });
+function copyResult() {
+    const text = document.getElementById('resultContent')?.innerText;
+    if (text) {
+        navigator.clipboard.writeText(text);
+        const btn = document.querySelector('.copy-btn');
+        btn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+        btn.style.color = 'var(--accent-teal)';
+        setTimeout(() => { btn.innerHTML = '<i class="fas fa-copy"></i> Copy'; btn.style.color = ''; }, 2000);
+    }
+}
 </script>
 {% endblock %}

@@ -1,285 +1,261 @@
 {% extends "base.html" %}
+{% block title %}Lead Qualifier — MarketAI Suite{% endblock %}
 
-{% block title %}Lead Tool - MarketAI Suite{% endblock %}
-
-{% block extra_css %}
-<style>
-  .tool-header {
-    margin-bottom: 2rem;
-    display: flex;
-    align-items: center;
-    gap: 1.5rem;
-  }
-
-  .tool-header-icon {
-    font-size: 2.5rem;
-    color: var(--secondary);
-    background: rgba(114, 9, 183, 0.1);
-    width: 80px;
-    height: 80px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 20px;
-    box-shadow: 0 0 20px rgba(114, 9, 183, 0.2);
-  }
-
-  .layout-grid {
+{% block extra_styles %}
+.two-col {
     display: grid;
-    grid-template-columns: 1fr 1.5fr;
-    gap: 2rem;
-  }
+    grid-template-columns: 420px 1fr;
+    gap: 1.5rem;
+    align-items: start;
+}
 
-  @media (max-width: 900px) {
-    .layout-grid {
-      grid-template-columns: 1fr;
-    }
-  }
+.urgency-options { display: flex; gap: 8px; }
 
-  .input-panel {
-    position: sticky;
-    top: 2rem;
-    height: max-content;
-  }
-
-  .result-panel {
-    display: flex;
-    flex-direction: column;
-    min-height: 500px;
-  }
-
-  .result-content {
+.urgency-btn {
     flex: 1;
-    background: rgba(0, 0, 0, 0.2);
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    padding: 9px 12px;
+    border: 1px solid var(--border);
     border-radius: 8px;
-    padding: 1.5rem;
-    color: var(--text-main);
-    white-space: pre-wrap;
-    line-height: 1.6;
-    overflow-y: auto;
-    font-size: 0.95rem;
-  }
+    background: transparent;
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+    font-family: 'DM Sans', sans-serif;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: center;
+}
 
-  .empty-state {
+.urgency-btn:hover { border-color: var(--border-bright); color: var(--text-primary); }
+.urgency-btn.selected-low { border-color: #3b82f6; color: #3b82f6; background: rgba(59,130,246,0.1); }
+.urgency-btn.selected-med { border-color: #f59e0b; color: #f59e0b; background: rgba(245,158,11,0.1); }
+.urgency-btn.selected-high { border-color: #ef4444; color: #ef4444; background: rgba(239,68,68,0.1); }
+
+#urgencyInput { display: none; }
+
+.result-section {
+    background: var(--bg-card2);
+    border: 1px solid var(--border-bright);
+    border-radius: 16px;
+    padding: 24px;
+    animation: fadeIn 0.4s ease;
+    position: relative;
+}
+
+.result-section h3 {
+    font-family: 'Syne', sans-serif;
+    font-size: 0.7rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent-cyan);
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.result-content {
+    color: var(--text-secondary);
+    font-size: 0.88rem;
+    line-height: 1.8;
+    white-space: pre-wrap;
+}
+
+.copy-btn {
+    position: absolute;
+    top: 16px; right: 16px;
+    background: rgba(10,108,245,0.1);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 6px 12px;
+    color: var(--text-secondary);
+    font-size: 0.75rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: 'DM Sans', sans-serif;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.copy-btn:hover { background: rgba(10,108,245,0.2); color: var(--text-primary); }
+
+.placeholder-state {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    height: 100%;
+    height: 280px;
     color: var(--text-muted);
     text-align: center;
-  }
+    gap: 12px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+}
 
-  .empty-state i {
-    font-size: 3rem;
-    margin-bottom: 1rem;
-    opacity: 0.5;
-  }
+.placeholder-state i { font-size: 36px; opacity: 0.3; }
+.placeholder-state p { font-size: 0.875rem; max-width: 240px; }
 
-  .loader {
-    display: none;
-    flex-direction: column;
+.score-legend { display: flex; flex-direction: column; gap: 7px; margin-top: 1.25rem; }
+
+.score-row {
+    display: flex;
     align-items: center;
-    justify-content: center;
-    height: 100%;
-    color: var(--secondary);
-  }
+    gap: 10px;
+    font-size: 0.78rem;
+}
 
-  .spinner {
-    width: 50px;
-    height: 50px;
-    border: 3px solid rgba(114, 9, 183, 0.3);
-    border-radius: 50%;
-    border-top-color: var(--secondary);
-    animation: spin 1s ease-in-out infinite;
-    margin-bottom: 1rem;
-  }
+.score-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
 
-  @keyframes spin {
-    to {
-      transform: rotate(360deg);
-    }
-  }
-
-  .pulse-text {
-    animation: pulse 1.5s infinite;
-    font-weight: 500;
-    letter-spacing: 1px;
-  }
-
-  @keyframes pulse {
-    0% {
-      opacity: 0.6;
-    }
-
-    50% {
-      opacity: 1;
-    }
-
-    100% {
-      opacity: 0.6;
-    }
-  }
-
-  /* Input Grid specifically for lead metrics */
-  .metrics-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1rem;
-  }
-</style>
+@media(max-width: 900px) { .two-col { grid-template-columns: 1fr; } }
 {% endblock %}
 
 {% block content %}
-<div class="tool-header">
-  <div class="tool-header-icon">
-    <i class="fa-solid fa-chart-line"></i>
-  </div>
-  <div>
-    <h1 class="page-title" style="margin-bottom: 0;">Predictive Lead Score</h1>
-    <p class="page-subtitle">Analyze lead variables to instantly assess conversion probability</p>
-  </div>
+<div class="page-header animate-in">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
+        <div style="width:36px;height:36px;background:rgba(14,245,212,0.1);border-radius:10px;display:flex;align-items:center;justify-content:center;color:var(--accent-teal)">
+            <i class="fas fa-star"></i>
+        </div>
+        <h1>Lead Qualifier</h1>
+    </div>
+    <p>Identify and prioritize high-value leads with AI-powered scoring</p>
 </div>
 
-<div class="layout-grid">
-  <!-- Input Panel -->
-  <div class="glass-card input-panel">
-    <h3 style="margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem;">
-      <i class="fa-solid fa-sliders"></i> Metrics
-    </h3>
+<div class="page-content">
+    <div class="two-col">
+        <!-- FORM -->
+        <div class="card animate-in">
+            <form id="leadForm">
+                <input type="hidden" id="urgencyInput" name="urgency">
 
-    <form id="leadForm">
-      <div class="form-group">
-        <label for="name" class="form-label">Lead Output/Company</label>
-        <input type="text" id="name" class="form-control" placeholder="e.g. Acme Corp Infrastructure Team" required>
-      </div>
+                <div class="form-group">
+                    <label class="form-label">Lead Name</label>
+                    <input type="text" id="name" name="name" class="form-input" placeholder="e.g., Sarah Johnson" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Budget Quality</label>
+                    <input type="text" id="budget" name="budget" class="form-input" placeholder="e.g., $50,000 annual budget, can approve deals" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Business Need</label>
+                    <textarea id="need" name="need" class="form-textarea" placeholder="e.g., Improving customer retention by 20%, reducing churn" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Urgency Level</label>
+                    <div class="urgency-options">
+                        <button type="button" class="urgency-btn" onclick="setUrgency(this, 'Low urgency, flexible timeline')">🔵 Low</button>
+                        <button type="button" class="urgency-btn" onclick="setUrgency(this, 'Medium urgency, solution needed in 3-6 months')">🟡 Medium</button>
+                        <button type="button" class="urgency-btn" onclick="setUrgency(this, 'High urgency, immediate implementation required')">🔴 High</button>
+                    </div>
+                    <input type="text" name="urgency_text" id="urgencyText" class="form-input" style="margin-top:8px" placeholder="Or describe urgency...">
+                </div>
 
-      <div class="form-group">
-        <label for="budget" class="form-label">Budget Range</label>
-        <select id="budget" class="form-control" required>
-          <option value="" disabled selected>Select estimated budget...</option>
-          <option value="Low ($0 - $10k)">Low ($0 - $10k)</option>
-          <option value="Medium ($10k - $50k)">Medium ($10k - $50k)</option>
-          <option value="High ($50k+)">High ($50k+)</option>
-          <option value="Unknown">Unknown</option>
-        </select>
-      </div>
+                <div style="display:flex;gap:10px;margin-top:0.5rem">
+                    <button type="submit" class="btn-primary" style="flex:1;justify-content:center;background:linear-gradient(135deg,#0a9478,#0ef5d4)">
+                        <i class="fas fa-star"></i> Score Lead
+                    </button>
+                    <button type="button" class="btn-secondary" onclick="clearForm()">Clear</button>
+                </div>
+            </form>
 
-      <div class="metrics-grid">
-        <div class="form-group">
-          <label for="need" class="form-label">Requirement Intensity</label>
-          <select id="need" class="form-control" required>
-            <option value="Low (Exploring)">Low (Exploring)</option>
-            <option value="Medium (Active pain point)">Medium (Active pain point)</option>
-            <option value="High (Critical workflow)">High (Critical block)</option>
-          </select>
+            <div class="loading-indicator" id="loadingLead">
+                <div class="spinner"></div>
+                <span>Analyzing lead qualification...</span>
+            </div>
+
+            <!-- Score legend -->
+            <div class="score-legend">
+                <div style="font-size:0.72rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-muted);margin-bottom:4px">Score Key</div>
+                <div class="score-row"><div class="score-dot" style="background:#ef4444"></div><span style="color:var(--text-secondary)">90–100: Hot lead (immediate follow-up)</span></div>
+                <div class="score-row"><div class="score-dot" style="background:#f59e0b"></div><span style="color:var(--text-secondary)">75–89: Warm lead (priority follow-up)</span></div>
+                <div class="score-row"><div class="score-dot" style="background:#3b82f6"></div><span style="color:var(--text-secondary)">60–74: Lukewarm lead (nurture)</span></div>
+                <div class="score-row"><div class="score-dot" style="background:var(--text-muted)"></div><span style="color:var(--text-secondary)">Below 60: Cold lead (defer)</span></div>
+            </div>
         </div>
 
-        <div class="form-group">
-          <label for="urgency" class="form-label">Urgency Timeline</label>
-          <select id="urgency" class="form-control" required>
-            <option value="Future Timeline (> 6mo)">> 6 months</option>
-            <option value="Near Term (3-6mo)">3-6 months</option>
-            <option value="Immediate (< 3mo)">Immediate (< 3mo)</option>
-          </select>
+        <!-- RESULT -->
+        <div id="resultBox">
+            <div class="placeholder-state">
+                <i class="fas fa-chart-bar"></i>
+                <p>Lead qualification analysis will appear here</p>
+                <span style="font-size:0.75rem">Fill in the form and click Score Lead</span>
+            </div>
         </div>
-      </div>
-
-      <button type="submit" class="btn btn-primary btn-block mt-3"
-        style="background: linear-gradient(135deg, var(--secondary), #3a0ca3); box-shadow: 0 4px 12px rgba(114, 9, 183, 0.3);">
-        <i class="fa-solid fa-wand-magic-sparkles"></i> Calculate Score
-      </button>
-    </form>
-  </div>
-
-  <!-- Output Panel -->
-  <div class="glass-card result-panel">
-    <h3 style="margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem; justify-content: space-between;">
-      <span><i class="fa-solid fa-file-lines"></i> AI Output</span>
-      <button class="btn btn-secondary" id="copyBtn" style="padding: 0.4rem 0.8rem; font-size: 0.85rem; display: none;">
-        <i class="fa-regular fa-copy"></i> Copy
-      </button>
-    </h3>
-
-    <div id="resultContent" class="result-content">
-      <!-- Empty State -->
-      <div class="empty-state" id="emptyState">
-        <i class="fa-solid fa-robot"></i>
-        <p>Input prospect variables to generate an AI evaluation and score.</p>
-      </div>
-
-      <!-- Loader -->
-      <div class="loader" id="loader">
-        <div class="spinner"></div>
-        <div class="pulse-text">LLaMA 3.3 is analyzing metrics...</div>
-      </div>
-
-      <!-- Actual Result -->
-      <div id="resultText" style="display: none;"></div>
     </div>
-  </div>
 </div>
 {% endblock %}
 
-{% block extra_js %}
+{% block scripts %}
 <script>
-  document.getElementById("leadForm").addEventListener("submit", async (e) => {
+let selectedUrgencyBtn = null;
+
+function setUrgency(btn, value) {
+    document.querySelectorAll('.urgency-btn').forEach(b => b.className = 'urgency-btn');
+    if (selectedUrgencyBtn === btn) {
+        selectedUrgencyBtn = null;
+        document.getElementById('urgencyText').value = '';
+        return;
+    }
+    selectedUrgencyBtn = btn;
+    if (value.includes('Low')) btn.classList.add('selected-low');
+    else if (value.includes('Medium')) btn.classList.add('selected-med');
+    else btn.classList.add('selected-high');
+    document.getElementById('urgencyText').value = value;
+}
+
+function clearForm() {
+    document.getElementById('leadForm').reset();
+    document.querySelectorAll('.urgency-btn').forEach(b => b.className = 'urgency-btn');
+    selectedUrgencyBtn = null;
+    document.getElementById('resultBox').innerHTML = `
+        <div class="placeholder-state">
+            <i class="fas fa-chart-bar"></i>
+            <p>Lead qualification analysis will appear here</p>
+            <span style="font-size:0.75rem">Fill in the form and click Score Lead</span>
+        </div>`;
+}
+
+document.getElementById('leadForm').addEventListener('submit', async (e) => {
     e.preventDefault();
+    const loading = document.getElementById('loadingLead');
+    const resultBox = document.getElementById('resultBox');
+    const formData = new FormData(e.target);
 
-    const name = document.getElementById("name").value;
-    const budget = document.getElementById("budget").value;
-    const need = document.getElementById("need").value;
-    const urgency = document.getElementById("urgency").value;
+    // Use urgency_text field as urgency
+    const urgencyVal = document.getElementById('urgencyText').value;
+    formData.set('urgency', urgencyVal);
 
-    const emptyState = document.getElementById("emptyState");
-    const loader = document.getElementById("loader");
-    const resultText = document.getElementById("resultText");
-    const copyBtn = document.getElementById("copyBtn");
-
-    emptyState.style.display = "none";
-    resultText.style.display = "none";
-    copyBtn.style.display = "none";
-    loader.style.display = "flex";
+    loading.classList.add('active');
+    resultBox.innerHTML = '';
 
     try {
-      const response = await fetch("/lead_score", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, budget, need, urgency })
-      });
-      const data = await response.json();
+        const response = await fetch('/lead_score', { method: 'POST', body: formData });
+        const data = await response.json();
+        loading.classList.remove('active');
 
-      loader.style.display = "none";
-      resultText.innerText = data.result || data.error;
-      resultText.style.display = "block";
-
-      if (data.result) {
-        copyBtn.style.display = "inline-flex";
-      }
-    } catch (error) {
-      loader.style.display = "none";
-      resultText.innerText = "Error connecting to server.";
-      resultText.style.display = "block";
-      resultText.style.color = "var(--danger)";
+        resultBox.innerHTML = `
+            <div class="result-section">
+                <h3><i class="fas fa-chart-bar"></i> Lead Qualification Analysis</h3>
+                <button class="copy-btn" onclick="copyResult()"><i class="fas fa-copy"></i> Copy</button>
+                <div class="result-content" id="resultContent">${data.result || data.error || 'An error occurred.'}</div>
+            </div>`;
+    } catch (err) {
+        loading.classList.remove('active');
+        resultBox.innerHTML = `<div class="result-section"><div style="color:#fca5a5"><i class="fas fa-exclamation-circle"></i> Error scoring lead. Please try again.</div></div>`;
     }
-  });
+});
 
-  document.getElementById("copyBtn").addEventListener("click", () => {
-    const text = document.getElementById("resultText").innerText;
-    navigator.clipboard.writeText(text);
-
-    const btn = document.getElementById("copyBtn");
-    const originalHtml = btn.innerHTML;
-    btn.innerHTML = '<i class="fa-solid fa-check"></i> Copied!';
-    btn.style.color = "var(--success)";
-    btn.style.borderColor = "var(--success)";
-
-    setTimeout(() => {
-      btn.innerHTML = originalHtml;
-      btn.style.color = "";
-      btn.style.borderColor = "";
-    }, 2000);
-  });
+function copyResult() {
+    const text = document.getElementById('resultContent')?.innerText;
+    if (text) {
+        navigator.clipboard.writeText(text);
+        const btn = document.querySelector('.copy-btn');
+        btn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+        btn.style.color = 'var(--accent-teal)';
+        setTimeout(() => { btn.innerHTML = '<i class="fas fa-copy"></i> Copy'; btn.style.color = ''; }, 2000);
+    }
+}
 </script>
 {% endblock %}

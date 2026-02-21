@@ -1,10 +1,5 @@
 Flask
 Flask-CORS
-Pillow
-opencv-python
-groq
+requests
 python-dotenv
 Werkzeug
-Flask-SQLAlchemy
-Flask-Login
-bcrypt
